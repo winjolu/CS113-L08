@@ -1,133 +1,137 @@
 package edu.miracosta.cs113;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.*;
 
 /**
- * HuffmanTree.java :
+ * HuffmanTree.java : Implementation of Huffman Tree encoding and decoding.
  *
- * @author
+ * @author winjolu
  * @version 1.0
  */
-//public class HuffmanTree implements HuffmanInterface {
+public class HuffmanTree implements HuffmanInterface {
 
-    // Completed huffman tree.
-
-
-
-
-    // Array of accepted characters from message.
-
-
+    private BinaryTree<HuffData> huffTree;
+    private Map<Character, String> encodingMap;
 
     /**
-     * String constructor creates a custom huffman tree for the String passed
-     * as a parameter. Also creates a dataTable that consists of the symbols
-     * and their corresponding huffman code for quick and easy decoding.
+     * Constructs a HuffmanTree from the given message.
      *
-     * @param message String from which the custom huffman tree is built.
+     * @param message The message to build the HuffmanTree from.
      */
+    public HuffmanTree(String message) {
+        buildTree(message);
+    }
 
+    @Override
+    public String decode(String codedMessage) {
+        StringBuilder decodedMessage = new StringBuilder();
+        BinaryTree<HuffData> currentTree = huffTree;
+        int i = 0;
+        while (i < codedMessage.length()) {
+            while (!currentTree.isLeaf()) {
+                char bit = codedMessage.charAt(i);
+                if (bit == '0') {
+                    currentTree = currentTree.getLeftSubtree();
+                } else {
+                    currentTree = currentTree.getRightSubtree();
+                }
+                i++;
+            }
+            HuffData huffData = currentTree.getData();
+            decodedMessage.append(huffData.symbol);
+            currentTree = huffTree;
+        }
+        return decodedMessage.toString();
+    }
 
-
+    @Override
+    public String encode(String message) {
+        StringBuilder encodedMessage = new StringBuilder();
+        for (char ch : message.toCharArray()) {
+            encodedMessage.append(encodingMap.get(ch));
+        }
+        return encodedMessage.toString();
+    }
 
     /**
-     * Decodes a message using the generated Huffman tree, where each character in the given message ('1's and '0's)
-     * corresponds to traversals through said tree.
+     * Builds the HuffmanTree from the given message.
      *
-     * @param codedMessage The compressed message based on this Huffman tree's encoding
-     * @return The given message in its decoded form
+     * @param message The message to build the tree from.
      */
+    private void buildTree(String message) {
+        Map<Character, Integer> frequencyMap = buildFrequencyMap(message);
+        PriorityQueue<BinaryTree<HuffData>> pq = new PriorityQueue<>(new CompareHuffmanTrees());
 
+        for (Map.Entry<Character, Integer> entry : frequencyMap.entrySet()) {
+            pq.offer(new BinaryTree<>(new HuffData(entry.getValue(), entry.getKey()), null, null));
+        }
 
+        while (pq.size() > 1) {
+            BinaryTree<HuffData> left = pq.poll();
+            BinaryTree<HuffData> right = pq.poll();
+            int newWeight = left.getData().weight + right.getData().weight;
+            pq.offer(new BinaryTree<>(new HuffData(newWeight, '\0'), left, right));
+        }
 
+        huffTree = pq.poll();
+        buildEncodingMap(huffTree, new StringBuilder());
+    }
 
     /**
-     * Outputs the message encoded from the generated Huffman tree.
-     * pre: the Huffman tree has been built using characters by which the message is only comprised.
+     * Builds a frequency map from the given message.
      *
-     * @param message The message to be decoded
-     * @return The given message in its specific Huffman encoding of '1's and '0's
+     * @param message The message to build the frequency map from.
+     * @return A map of characters to their frequencies.
      */
-
-
-
-
+    private Map<Character, Integer> buildFrequencyMap(String message) {
+        Map<Character, Integer> frequencyMap = new HashMap<>();
+        for (char ch : message.toCharArray()) {
+            frequencyMap.put(ch, frequencyMap.getOrDefault(ch, 0) + 1);
+        }
+        return frequencyMap;
+    }
 
     /**
-     * A helper method that build the custom huffman tree.
+     * Builds the encoding map for the HuffmanTree.
      *
-     * @param symbols array of Huffman objects
+     * @param tree The HuffmanTree.
+     * @param prefix The prefix code.
      */
+    private void buildEncodingMap(BinaryTree<HuffData> tree, StringBuilder prefix) {
+        if (tree.isLeaf()) {
+            HuffData huffData = tree.getData();
+            encodingMap.put(huffData.symbol, prefix.toString());
+        } else {
+            prefix.append('0');
+            buildEncodingMap(tree.getLeftSubtree(), prefix);
+            prefix.deleteCharAt(prefix.length() - 1);
 
-
-
-
+            prefix.append('1');
+            buildEncodingMap(tree.getRightSubtree(), prefix);
+            prefix.deleteCharAt(prefix.length() - 1);
+        }
+    }
 
     /**
-     * Helper method that counts the frequency of the accepted characters in a string and returns
-     * an array of nodes containing the symbol and weight.
-     *
-     * @param message sting being analyzed.
-     * @return HuffmanData array of nodes with their symbols and frequencies.
+     * HuffData class to store the symbol and its weight.
      */
+    private static class HuffData {
+        private int weight;
+        private char symbol;
 
-
-
+        public HuffData(int weight, char symbol) {
+            this.weight = weight;
+            this.symbol = symbol;
+        }
+    }
 
     /**
-     * Wrapper method for the recursive buildFrequencyTable method.
-     *
-     * pre - HuffmanTree is already built.
-     * @param root root node of the huffman tree.
+     * Comparator for comparing HuffmanTrees based on their weights.
      */
-
-
-
-
-    /**
-     * Traverses through the huffman tree and obtains the huffman codes for each symbol
-     * and stores the values in a table.
-     * @param node
-     * @param s
-     */
-
-
-
-
-
-    /**
-     * Class representing the node in a huffman tree. Used to build the tree.
-     */
-
-
-
-
-    /**
-     * Nested class for comparing two HuffmanTree's.
-     */
-//    private static class CompareHuffmanTrees implements Comparator<BinaryTree<HuffData>> {
-
-        /**
-         * Compares the weights in both children of this root.
-         *
-         * @param treeLeft left child
-         * @param treeRight right child
-         * @return -1 if left is less than right, 0 if
-         *         left equals right and +1 if left is
-         *         greater than right.
-         */
-
-//    }
-
-
-    /**
-     * Stores the symbol of each character and its corresponding huffman code for easy
-     * decoding lookup.
-     */
-//    public class FrequencyTable {
-//
-//    }
-//}
+    private static class CompareHuffmanTrees implements Comparator<BinaryTree<HuffData>> {
+        @Override
+        public int compare(BinaryTree<HuffData> tree1, BinaryTree<HuffData> tree2) {
+            return tree1.getData().weight - tree2.getData().weight;
+        }
+    }
+}

@@ -1,110 +1,75 @@
-package edu.miracosta.cs113;
-
-import java.io.*;
-import java.util.Scanner;
-
-
-/**
- * Main.java : D
- *
- * @author
- * @version 1.0
- */
 public class Main {
 
-    /*
-     * Names of the files created, Original is from the initial website
-     * Encoded is the compressed file,decoded is created from the encoded
-     * file
-     */
+    private static final String ORIGINAL_FILE = "original.txt";
+    private static final String ENCODED_FILE = "encoded.txt";
+    private static final String DECODED_FILE = "decoded.txt";
 
-
-
-    /**
-     * Main driver used for creating files.
-     *
-     * @param args not used for this driver.
-     */
     public static void main(String[] args) {
+        String url = "https://github.com/timburks/gott/blob/master/test/gettysburg-address.txt"; // gettysburg address
+        HuffmanTree huffmanTree;
+        String originalText, encodedText, decodedText;
+        int originalBits, encodedBits, decodedBits;
+        double compressionPercentage;
 
-        // Declare
+        // Fetch and clean the content from the URL
+        try {
+            TextFileGenerator.makeCleanFile(url, ORIGINAL_FILE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
+        // Read the cleaned original file
+        originalText = readFile(ORIGINAL_FILE);
 
+        // Build the Huffman tree using the content of the original file
+        huffmanTree = new HuffmanTree(originalText);
 
-        // Initialize
+        // Encode and create encoded file
+        encodedText = huffmanTree.encode(originalText);
+        createFile(ENCODED_FILE, encodedText);
 
+        // Read encoded file
+        encodedText = readFile(ENCODED_FILE);
 
+        // Decode encoded file with Huffman tree
+        decodedText = huffmanTree.decode(encodedText);
 
-        // Get website to scrape.
+        // Create the decoded file
+        createFile(DECODED_FILE, decodedText);
 
+        // Count the number of bits used in each file
+        originalBits = originalText.length() * 16; // 16 bits per character
+        encodedBits = encodedText.length(); // Each character is either '0' or '1'
+        decodedBits = decodedText.length() * 16; // 16 bits per character
 
-        // Create the original file from the website.
+        // Calculate percent of compression
+        compressionPercentage = ((double) encodedBits / originalBits) * 100;
 
-
-
-        // Read Original file and create a custom huffman tree.
-
-
-
-        // Encode and create encoded file.
-
-
-
-        // Read encoded file.
-
-
-
-        // Decode encoded file with huffman tree.
-
-
-
-        // Create the decoded file.
-
-
-
-        // Count the number of bits used in each file.
-
-
-        // Calculate percent of compression.
-
-
-        // Display Bits and percentage to the console.
-
+        // Display Bits and percentage to the console
+        System.out.println("Original file bits: " + originalBits);
+        System.out.println("Encoded file bits: " + encodedBits);
+        System.out.println("Decoded file bits: " + decodedBits);
+        System.out.println("Compression percentage: " + compressionPercentage + "%");
     }
 
+    private static void createFile(String fileName, String contents) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            writer.write(contents);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-
-    /**
-     * Creates the original text file from the raw data from the website.
-     *
-     * @param url name of website being scrapped.
-     * @param outputFileName name of the file being created.
-     */
-
-
-
-    /**
-     * Creates a new file with the the filename and contents passed as parameter.
-     *
-     * @param fileName name of the file being created.
-     * @param contents String of content being written to the file.
-     */
-
-
-
-    /**
-     * Opens a stream and reads the file name passed as a parameter,
-     * and returns the contents of the file as a string.
-     *
-     * @param fileName name of the file being read.
-     * @return String representation of the file.
-     */
-
-
-    /**
-     * Counts the number of bits in the text file, ie (0's and 1's).
-     *
-     * @return total number of bits.
-     */
-
+    private static String readFile(String fileName) {
+        StringBuilder content = new StringBuilder();
+        try (Scanner scanner = new Scanner(new File(fileName))) {
+            while (scanner.hasNextLine()) {
+                content.append(scanner.nextLine()).append("\n");
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return content.toString();
+    }
 }
